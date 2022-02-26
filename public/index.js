@@ -9,8 +9,21 @@ function removeContentFrom(element) {
 function showMessages(messages, where) {
   for (const message of messages) {
     const li = document.createElement('li');
-    li.textContent = message;
+    li.textContent = message.msg;
+    li.dataset.id = message.id;
     where.append(li);
+    li.addEventListener('mouseenter', showDetail);
+  }
+}
+
+async function showDetail(e) {
+  const response = await fetch('messages/' + e.target.dataset.id);
+  if (response.ok) {
+    const detail = await response.json();
+    const p = document.createElement('p');
+    p.textContent = `Message received on server at ${detail.time}`;
+    removeContentFrom(el.detail);
+    el.detail.append(p);
   }
 }
 
@@ -20,7 +33,7 @@ async function loadMessages() {
   if (response.ok) {
     messages = await response.json();
   } else {
-    messages = ['failed to load messages :-('];
+    messages = [{ msg: 'failed to load messages :-(' }];
   }
   removeContentFrom(el.messagelist);
   showMessages(messages, el.messagelist);
@@ -57,12 +70,14 @@ function prepareHandles(){
   el.messagelist = document.querySelector('#messagelist');
   el.message = document.querySelector('#message');
   el.send = document.querySelector('#send');
+  el.detail = document.querySelector('#detail');
 }
 
 
  function addEventListeners() {
   el.send.addEventListener('click', sendMessage);
   el.message.addEventListener('keyup', checkKeys);
+  
 }
 
 function init() {
