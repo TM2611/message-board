@@ -43,11 +43,10 @@ async function sendMessage() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
   if (response.ok) {
     el.message.value = '';
-    const updatedMessages = await response.json();
-    removeContentFrom(el.messagelist);
+    const updatedMessages = await response.json(); // ?
+    removeContentFrom(el.messagelist); // ?
     showMessages(updatedMessages, el.messagelist);
   } else {
     console.log('failed to send message', response);

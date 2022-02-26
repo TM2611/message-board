@@ -2,6 +2,7 @@ import express from 'express';
 
 const app = express();
 
+// this will serve the files present in /public
 app.use(express.static('public'));
 
 let messages = [
