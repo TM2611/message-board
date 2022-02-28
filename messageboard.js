@@ -1,53 +1,34 @@
-import uuid from 'uuid-random';
+import config from './config.js';
+import Postgres from 'pg';
 
-let messages = [
-    {
-      id: 'xnshfdsafasd',
-      msg: 'these are three default messages',
-      time: 'an hour ago',
-    },
-    {
-      id: 'dskjdshkjhsd',
-      msg: 'delivered from the server',
-      time: 'yesterday',
-    },
-    {
-      id: 'vcxbxcvfggzv',
-      msg: 'using a custom route',
-      time: 'last week',
-    },
-];
+const sql = new Postgres.Client(config);
+sql.connect();
 
-export function listMessages() {
-    return messages;
+sql.on('error', (err) => {
+  console.error('SQL Fail', err);
+  sql.end();
+});
+
+export async function listMessages() {
+  const q = 'SELECT * FROM Messageboard ORDER BY time DESC LIMIT 10;';
+  const result = await sql.query(q);
+  return result.rows;
 }
   
-export function findMessage(id) {
-    for (const message of messages) {
-        if (message.id === id) {
-        return message;
-        }
-    }
-    return null;
+export async function findMessage(id) {
+  const q = 'SELECT * FROM Messageboard WHERE id = $1;';
+  const result = await sql.query(q, [id]);
+  return result.rows[0];
 }
 
-export function addMessage(msg) {
-    const newMessage = {
-        id: uuid(),
-        time: Date(),
-        msg,
-    };
-    messages = [newMessage, ...messages.slice(0, 9)];
-    return messages;
+export async function addMessage(msg) {
+  const q = 'INSERT INTO Messageboard (msg) VALUES ($1);';
+  await sql.query(q, [msg]);
+  return listMessages();
 }
 
-export function editMessage(updatedMessage) {
-    const storedMessage = findMessage(updatedMessage.id);
-    if (storedMessage == null) throw new Error('message not found');
-  
-    // update old message in place
-    storedMessage.time = Date();
-    storedMessage.msg = updatedMessage.msg;
-  
-    return storedMessage;
-  }
+export async function editMessage(updatedMessage) {
+  const q = 'UPDATE Messageboard SET msg = $1 WHERE id = $2;';
+  await sql.query(q, [updatedMessage.msg, updatedMessage.id]);
+  return findMessage(updatedMessage.id);
+}

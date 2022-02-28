@@ -7,7 +7,9 @@
   "scripts": {
     "test": "npm run lint",
     "start": "node server.js",
-    "watch": "nodemon -e js,json,css,html"
+    "watch": "nodemon -e js,json,css,html",
+    "setuppg": "createdb messageboard && psql messageboard < messageboard.sql",
+    "setup": "npm run setuppg"
   },
   "repository": {
     "type": "git",

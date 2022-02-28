@@ -7,12 +7,12 @@ const app = express();
 // extensions parameter to automatically fill in .html in URLs.
 app.use(express.static('public', { extensions: ['html'] }));
 
-function getMessages(req, res) {
-  res.json(mb.listMessages());
+async function getMessages(req, res) {
+  res.json(await mb.listMessages());
 }
 
-function getMessage(req, res) {
-  const result = mb.findMessage(req.params.id);
+async function getMessage(req, res) {
+  const result = await mb.findMessage(req.params.id);
   if (!result) {
     res.status(404).send('No match for that ID.');
     return;
@@ -20,8 +20,8 @@ function getMessage(req, res) {
   res.json(result);
 }
 
-function postMessage(req, res) {
-  const messages = mb.addMessage(req.body.msg);
+async function postMessage(req, res) {
+  const messages = await mb.addMessage(req.body.msg);
   res.json(messages);
 };
 
@@ -30,9 +30,17 @@ function putMessage(req, res) {
   res.json(message);
 }
 
-app.get('/messages', getMessages);
-app.get('/messages/:id', getMessage);
-app.post('/messages', express.json(), postMessage); // 3?
-app.put('/messages/:id', express.json(), putMessage); // 3?
+// wrap async function for express.js error handling
+function asyncWrap(f) {
+  return (req, res, next) => {
+    Promise.resolve(f(req, res, next))
+      .catch((e) => next(e || new Error()));
+  };
+}
+
+app.get('/messages', asyncWrap(getMessages));
+app.get('/messages/:id', asyncWrap(getMessage));
+app.put('/messages/:id', express.json(), asyncWrap(putMessage));
+app.post('/messages', express.json(), asyncWrap(postMessage));
 
 app.listen(8080);
